@@ -1,6 +1,7 @@
-# crawl through the dicom archives inspecting each dcm image to see if it 
+# crawl through the dicom archives inspecting each dcm image to see if it
 # contains the incorrect coil elements
 
+# dependencies
 from pydicom import dcmread
 import os
 import argparse
@@ -98,7 +99,7 @@ for dcm in dcm_files:
 
     # write the results to a long csv file
     dataFrame = pd.DataFrame(datastore, columns=['tarArchive','dirWithinArchive', 'filename', 'sequenceNum', 'keyfield'])
-    dataFrame.to_csv('/out/log.csv', mode='a')
+    dataFrame.to_csv('/out/log.csv', mode='a', header=False)
 
 
 
