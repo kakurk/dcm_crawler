@@ -7,6 +7,31 @@ import os
 import argparse
 import tarfile
 import pandas as pd
+import datetime
+from dateutil.relativedelta import relativedelta
+
+def get_creation_time(filepath):
+    """Gets the creation time of a file."""
+
+    stat = os.stat(filepath)
+    timestamp = stat.st_ctime  # Creation time in seconds since epoch
+    creation_time = datetime.datetime.fromtimestamp(timestamp)
+    return creation_time
+
+def is_within_timeframe(target_date, start_date, end_date):
+    """
+    Checks if a target date is within a given timeframe.
+
+    Args:
+        target_date (datetime): The date to check.
+        start_date (datetime): The start of the timeframe.
+        end_date (datetime): The end of the timeframe.
+
+    Returns:
+        bool: True if the target date is within the timeframe, False otherwise.
+    """
+
+    return start_date <= target_date <= end_date
 
 # helper function
 def get_files_with_extension(directory, extension):
@@ -28,6 +53,10 @@ tmp_dir = args.tmp_dir
 # find all files in the dicom_dir. Filter for 1.) files 2.) that end in ".tar.gz"
 dcm_files = get_files_with_extension(dcm_dir, '.tar.gz')
 
+# get todays date
+today          = datetime.date.today()
+six_months_ago = today - relativedelta(months=6)
+
 for dcm in dcm_files:
 
     print()
@@ -35,6 +64,23 @@ for dcm in dcm_files:
     print()
 
     datastore = []
+
+    # when was this tar archive created?
+    creation_time     = get_creation_time(dcm)
+
+    print('Creation Time:')
+    print(creation_time)
+    print()
+
+    # is the creation time within the last 6 months?
+    isWithinLastSixMonths = is_within_timeframe(target_date = creation_time.date(), start_date = six_months_ago, end_date = today)
+
+    print('Is Within Last 6 Months:')
+    print(isWithinLastSixMonths)
+    print()
+
+    if not isWithinLastSixMonths:
+      continue
 
     # unzip and untar the files
     this_tar_archive = tarfile.open(dcm)
@@ -67,6 +113,8 @@ for dcm in dcm_files:
 
             # read it into python
             dcm_header = dcmread(fullpath_to_dcm)
+            series_num  = dcm_header.get('SeriesNumber')
+            series_desc = dcm_header.get('SeriesDescription')
 
             # perform the check
             #   Check that the header has field ('00051', '100F')
@@ -75,7 +123,7 @@ for dcm in dcm_files:
             if checkOne:
                 ele = dcm_header.get(('0051','100F'))
                 print(ele)
-                data = [this_tar_archive.name, fileparts[0], fileparts[1], 0, str(ele)]
+                data = [this_tar_archive.name, fileparts[0], fileparts[1], 0, series_num, series_desc, str(ele)]
                 datastore.append(data)
             elif checkTwo:
                 entry = dcm_header.get(('5200','9230'))
@@ -85,22 +133,18 @@ for dcm in dcm_files:
                     c = c + 1
                     fieldEntry = e.get(('0021','11FE'))[0].get(('0021','114F'))
                     print(fieldEntry)
-                    data = [this_tar_archive.name, fileparts[0], fileparts[1], c, str(fieldEntry)]
+                    data = [this_tar_archive.name, fileparts[0], fileparts[1], c, series_num, series_desc, str(fieldEntry)]
                     datastore.append(data)
             else:
                 print()
                 print("Couldn't find either field.")
                 print()
-                data = [this_tar_archive.name, fileparts[0], fileparts[1], 0, '']
+                data = [this_tar_archive.name, fileparts[0], fileparts[1], 0, series_num, series_desc, '']
                 datastore.append(data)
 
             # remove the extracted file
             os.remove(fullpath_to_dcm)
 
     # write the results to a long csv file
-    dataFrame = pd.DataFrame(datastore, columns=['tarArchive','dirWithinArchive', 'filename', 'sequenceNum', 'keyfield'])
+    dataFrame = pd.DataFrame(datastore, columns=['tarArchive','dirWithinArchive', 'filename', 'sequenceNum', 'series_num', 'series_desc', 'keyfield'])
     dataFrame.to_csv('/out/log.csv', mode='a', header=False)
-
-
-
-
