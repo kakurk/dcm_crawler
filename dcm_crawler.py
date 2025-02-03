@@ -51,22 +51,22 @@ dcm_dir = args.dcm_dir
 tmp_dir = args.tmp_dir
 
 # find all files in the dicom_dir. Filter for 1.) files 2.) that end in ".tar.gz"
-dcm_files = get_files_with_extension(dcm_dir, '.tar.gz')
+tar_archives = get_files_with_extension(dcm_dir, '.tar.gz')
 
 # get todays date
 today          = datetime.date.today()
 six_months_ago = today - relativedelta(months=6)
 
-for dcm in dcm_files:
+for this_archive in tar_archives:
 
     print()
-    print(dcm)
+    print(this_archive)
     print()
 
     datastore = []
 
     # when was this tar archive created?
-    creation_time     = get_creation_time(dcm)
+    creation_time     = get_creation_time(this_archive)
 
     print('Creation Time:')
     print(creation_time)
@@ -83,7 +83,7 @@ for dcm in dcm_files:
       continue
 
     # unzip and untar the files
-    this_tar_archive = tarfile.open(dcm)
+    this_tar_archive = tarfile.open(this_archive)
 
     # scroll through the archive until we find a dcm file
     while True:
@@ -131,7 +131,11 @@ for dcm in dcm_files:
                 c = -1
                 for e in entry:
                     c = c + 1
-                    fieldEntry = e.get(('0021','11FE'))[0].get(('0021','114F'))
+                    # 
+                    try:
+                        fieldEntry = e.get(('0021','11FE'))[0].get(('0021','114F'))
+                    except:
+                        fieldEntry = e.get(('0021','10FE'))[0].get(('0021','104F'))
                     print(fieldEntry)
                     data = [this_tar_archive.name, fileparts[0], fileparts[1], c, series_num, series_desc, str(fieldEntry)]
                     datastore.append(data)
