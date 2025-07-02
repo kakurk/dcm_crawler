@@ -124,10 +124,10 @@ if __name__ == "__main__":
             # uses a call to the linux "find" command
             dcm_files = find_dicom_files(xnat_archive_location)
 
-            BATCH_SIZE = 1000
+            BATCH_SIZE = 10000
             outfile = os.path.expanduser("~/crawl_results.psv.gz")
             datastore = []
-            subject_cache = {}            
+            subject_cache = {}
 
             print('Crawling dcm files...\n')
 
