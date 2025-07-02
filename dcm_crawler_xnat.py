@@ -127,6 +127,7 @@ if __name__ == "__main__":
             BATCH_SIZE = 1000
             outfile = os.path.expanduser("~/crawl_results.psv.gz")
             datastore = []
+            subject_cache = {}            
 
             print('Crawling dcm files...\n')
 
@@ -142,7 +143,7 @@ if __name__ == "__main__":
                 sessionid = extract_session_id_from_dcm_path(d)
 
                 # implement a cache approach to limit calls to the database
-                subject_cache = {}
+  
                 key = (projectid, sessionid)
                 if key in subject_cache:
                     subjectid = subject_cache[key]
