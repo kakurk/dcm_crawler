@@ -186,7 +186,6 @@ if __name__ == "__main__":
                     data = [projectid, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, 0, '', '']
                     datastore.append(data)
                 
-                print(len(datastore))
                 if len(datastore) > BATCH_SIZE:
                     print(f'{i}/{len(dcm_files)}\n')
                     flush_datastore()
