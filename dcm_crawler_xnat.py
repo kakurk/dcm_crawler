@@ -151,8 +151,14 @@ if __name__ == "__main__":
 
                 dcm_filename = os.path.basename(d)
 
-                # read it into python
-                dcm_header = dcmread(d, stop_before_pixels=True)
+                # read dicom header fields
+                #   We are interested in the following fields:
+                #     SeriesNumber, SeriesDescription, StudyDate, ('0051','100F'),
+                #     ('5200','9230')
+                #   The last two fields are not always present, so we check for them
+                #   separately.
+                tags = ['SeriesNumber', 'SeriesDescription', 'StudyDate', ('0051','100F'), ('5200','9230')]
+                dcm_header = dcmread(d, stop_before_pixels=True, specific_tags=tags)
                 series_num  = dcm_header.get('SeriesNumber')
                 series_desc = dcm_header.get('SeriesDescription')
                 session_date = dcm_header.get('StudyDate')
