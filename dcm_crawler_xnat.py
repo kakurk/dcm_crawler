@@ -180,9 +180,6 @@ if __name__ == "__main__":
                         data = [projectid, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, c, '(5200,9230)', str(fieldEntry)]
                         datastore.append(data)
                 else:
-                    print()
-                    print("Couldn't find either field.")
-                    print()
                     data = [projectid, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, 0, '', '']
                     datastore.append(data)
                 
