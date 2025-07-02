@@ -137,8 +137,6 @@ if __name__ == "__main__":
 
                 i = i+1
 
-                print(f'{i}/{len(dcm_files)}\n')
-
                 projectid = extract_project_id_from_dcm_path(d)
                 sessionid = extract_session_id_from_dcm_path(d)
 
@@ -190,6 +188,7 @@ if __name__ == "__main__":
                 
                 print(len(datastore))
                 if len(datastore) > BATCH_SIZE:
+                    print(f'{i}/{len(dcm_files)}\n')
                     flush_datastore()
 
             # write the results to a long csv file
