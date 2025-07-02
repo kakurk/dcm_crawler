@@ -9,17 +9,15 @@ from pydicom import dcmread
 import os
 import pandas as pd
 import datetime
-import xml.etree.ElementTree as ET
 import psycopg2
 from psycopg2.extras import RealDictCursor
-import pdb
 
 import subprocess
 
 def find_dicom_files(target_directory):
     try:
         result = subprocess.run(
-            ['find', target_directory, '-type', 'f', '-iname', '*.dcm'],
+            ['find', target_directory, '-path', '/data/xnat/archive/qa', '-prune', '-type', 'f', '-iname', '*.dcm'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
