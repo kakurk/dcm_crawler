@@ -125,6 +125,8 @@ if __name__ == "__main__":
     # Establish connection and cursor ONCE
     with psycopg2.connect(dbname="xnat",user="xnat",password="ozymandias",host="localhost",port=5432) as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
+
+            # where the data are archived on this machine
             xnat_archive_location = '/data/xnat/archive'
             dcm_files = find_dicom_files(xnat_archive_location, modified_within_days=args.modified_within_days)
 
@@ -162,9 +164,8 @@ if __name__ == "__main__":
                 #     ('5200','9230')
                 #   The last two fields are not always present, so we check for them
                 #   separately.
-                tags = ['StudyDescription', 'SeriesNumber', 'SeriesDescription', 'StudyDate', ('0051','100F'), ('5200','9230'), '']
+                tags = ['SeriesNumber', 'SeriesDescription', 'StudyDate', ('0051','100F'), ('5200','9230')]
                 dcm_header = dcmread(d, stop_before_pixels=True, specific_tags=tags)
-                projectid_dcm = dcm_header.get('StudyDescription')
                 series_num  = dcm_header.get('SeriesNumber')
                 series_desc = dcm_header.get('SeriesDescription')
                 session_date = dcm_header.get('StudyDate')
@@ -177,7 +178,7 @@ if __name__ == "__main__":
                 checkTwo = ('5200','9230') in dcm_header
                 if checkOne:
                     ele = dcm_header.get(('0051','100F'))
-                    data = [projectid, projectid_dcm, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, 0, '(0051,100F)', str(ele)]
+                    data = [projectid, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, 0, '(0051,100F)', str(ele)]
                     datastore.append(data)
                 elif checkTwo:
                     entry = dcm_header.get(('5200','9230'))
@@ -189,10 +190,10 @@ if __name__ == "__main__":
                             fieldEntry = e.get(('0021','11FE'))[0].get(('0021','114F'))
                         except:
                             fieldEntry = e.get(('0021','10FE'))[0].get(('0021','104F'))
-                        data = [projectid, projectid_dcm, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, c, '(5200,9230)', str(fieldEntry)]
+                        data = [projectid, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, c, '(5200,9230)', str(fieldEntry)]
                         datastore.append(data)
                 else:
-                    data = [projectid, projectid_dcm, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, 0, '', '']
+                    data = [projectid, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, 0, '', '']
                     datastore.append(data)
                 
                 if len(datastore) > BATCH_SIZE:
