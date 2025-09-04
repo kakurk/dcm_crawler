@@ -13,11 +13,17 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 import subprocess
+import argparse
 
-def find_dicom_files(target_directory):
+def find_dicom_files(target_directory, modified_within_days=None):
+    # Build the find command
+    find_cmd = ['find', target_directory, '-path', '/data/xnat/archive/qa', '-prune', '-o', '-type', 'f', '-iname', '*.dcm']
+    # Add date filters if provided
+    if modified_within_days is not None:
+        find_cmd.extend(['-mtime', f'-{modified_within_days}'])
     try:
         result = subprocess.run(
-            ['find', target_directory, '-path', '/data/xnat/archive/qa', '-prune', '-o', '-type', 'f', '-iname', '*.dcm', '-print'],
+            find_cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -112,17 +118,15 @@ def flush_datastore():
         datastore.clear()
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="DICOM Crawler")
+    parser.add_argument('--modified-within-days', type=int, help='Find files modified within the last N days')
+    args = parser.parse_args()
 
     # Establish connection and cursor ONCE
     with psycopg2.connect(dbname="xnat",user="xnat",password="ozymandias",host="localhost",port=5432) as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-
-            # where the data are archived on this machine
             xnat_archive_location = '/data/xnat/archive'
-
-            # find all dicom files
-            # uses a call to the linux "find" command
-            dcm_files = find_dicom_files(xnat_archive_location)
+            dcm_files = find_dicom_files(xnat_archive_location, modified_within_days=args.modified_within_days)
 
             BATCH_SIZE = 10000
             outfile = os.path.expanduser("~/crawl_results.psv.gz")
