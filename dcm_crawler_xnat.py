@@ -12,15 +12,23 @@ import datetime
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+import os
+
 import subprocess
 import argparse
 
 def find_dicom_files(target_directory, modified_within_days=None):
-    # Build the find command
-    find_cmd = ['find', target_directory, '-path', '/data/xnat/archive/qa', '-prune', '-o', '-type', 'f', '-iname', '*.dcm']
-    # Add date filters if provided
+    find_cmd = [
+        'find', target_directory,
+        '-path', '/data/xnat/archive/qa', '-prune', '-o',
+        '(',
+            '-path', '/data/xnat/archive/*/arc001/*/SCANS/*/DICOM/*',
+            '-type', 'f',
+            '-iname', '*.dcm'
+        ]
     if modified_within_days is not None:
         find_cmd.extend(['-mtime', f'-{modified_within_days}'])
+    find_cmd.extend([')', '-print'])
     try:
         result = subprocess.run(
             find_cmd,
