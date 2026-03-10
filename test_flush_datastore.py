@@ -1,12 +1,12 @@
-from dcm_crawler_xnat import flush_datastore
+import dcm_crawler_xnat
 
 # where the data are archived on this machine
-datastore = ['','']
-outfile = '/tmp/test.psv.gz'
+dcm_crawler_xnat.datastore = ['','']
+dcm_crawler_xnat.outfile = '/tmp/test.psv.gz'
 
 # extract projectid
-flush_datastore()
+dcm_crawler_xnat.flush_datastore()
 
 # show results
-print(datastore)
-print(outfile)
+print(dcm_crawler_xnat.datastore)
+print(dcm_crawler_xnat.outfile)
