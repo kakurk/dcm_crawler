@@ -17,6 +17,8 @@ import os
 import subprocess
 import argparse
 
+import re
+
 def find_dicom_files(target_directory, modified_within_days=None):
     find_cmd = [
         'find', target_directory,
@@ -125,6 +127,14 @@ def flush_datastore():
         df.to_csv(outfile, mode='a', header=False, compression="gzip", index=False, sep="|")
         datastore.clear()
 
+def extract_coil_string(s):
+    # given a dcm header entry, extract the string that describes the coils elements
+    match = re.search(r"(?<=')[^']+(?=')", s)
+    if match:
+        return match.group(0)
+    else:
+        return None
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="DICOM Crawler")
     parser.add_argument('--modified-within-days', type=int, help='Find files modified within the last N days')
@@ -186,22 +196,26 @@ if __name__ == "__main__":
                 checkTwo = ('5200','9230') in dcm_header
                 if checkOne:
                     ele = dcm_header.get(('0051','100F'))
-                    data = [projectid, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, 0, '(0051,100F)', str(ele)]
+                    CoilString = extract_coil_string(str(ele))
+                    data = [projectid, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, '(0051,100F)', CoilString]
                     datastore.append(data)
                 elif checkTwo:
                     entry = dcm_header.get(('5200','9230'))
                     # scroll through the entries within this field. There appears to be one entry per volume?
                     c = -1
+                    CoilStringList = []
                     for e in entry:
                         c = c + 1
                         try:
                             fieldEntry = e.get(('0021','11FE'))[0].get(('0021','114F'))
                         except:
                             fieldEntry = e.get(('0021','10FE'))[0].get(('0021','104F'))
-                        data = [projectid, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, c, '(5200,9230)', str(fieldEntry)]
-                        datastore.append(data)
+                        CoilString = extract_coil_string(str(fieldEntry))
+                        CoilStringList.append(CoilString)
+                    data = [projectid, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, '(5200,9230)', CoilStringList]
+                    datastore.append(data)
                 else:
-                    data = [projectid, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, 0, '', '']
+                    data = [projectid, subjectid, sessionid, session_date_str, series_num, series_desc, dcm_filename, '', '']
                     datastore.append(data)
                 
                 if len(datastore) > BATCH_SIZE:
