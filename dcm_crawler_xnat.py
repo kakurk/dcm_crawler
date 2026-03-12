@@ -149,7 +149,7 @@ if __name__ == "__main__":
             dcm_files = find_dicom_files(xnat_archive_location, modified_within_days=args.modified_within_days)
 
             BATCH_SIZE = 10000
-            outfile = os.path.expanduser("~/crawl_results.psv.gz")
+            outfile = "/tmp/crawl_results.psv.gz"
             datastore = []
             subject_cache = {}
 
