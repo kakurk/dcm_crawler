@@ -1,0 +1,31 @@
+# DICOM Crawler Workflow
+
+This repository houses Boston University's Cognitive Neuroimaing Center's "DICOM Crawler" workflow.
+
+Problem: Stephanie McMains (head of the Cognitive Neuroimaging Center) noticed that some users have been consistently forgetting to attach the top half of the scanner coil. This leads to degredated scan quality.
+
+Solution: This workflow scans the headers of the DICOM files stored in the CNC's archive for evidence that the top half of the scan coil had been removed.
+
+Before running, you need to make sure that the virtual enviorment is activated. For example:
+
+    # python version
+    > python --version
+    Python 3.9.25
+
+    # create a new virtual enviroment
+    > python -m venv .venv/dcm_crawl
+
+    # activate it
+    > source .venv/dcm_crawl/bin/activate
+
+    # install all of the requirements
+    > pip install -r requirements.txt
+
+Usage:
+
+    dcm_crawler_xnat.py --modified-within-days D
+
+where D is an integer, representing number of days.
+
+Outputs:  
+1. Writes compressed, psv report to /tmp/crawl_results.psv.gz.
